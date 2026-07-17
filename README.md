@@ -10,4 +10,4 @@ Sistem ini dikembangkan menggunakan bahasa pemrograman Go (Golang) dan mengimple
 *   Framework : Gin Gonic
 *   Cloud Service : Google Sheet dan Open Router API
 *   Deployment : Ubuntu Server (VPS)
-*   Testing : Portman dan WhatsApp
+*   Testing : Postman dan WhatsApp
