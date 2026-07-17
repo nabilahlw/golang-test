@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func koneksi() *gorm.DB {
+func Koneksi() *gorm.DB {
 	dbhost := os.Getenv("DB_HOST")
 	dbport := os.Getenv("DB_PORT")
 	dbuser := os.Getenv("DB_USER")

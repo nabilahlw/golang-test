@@ -1,0 +1,8 @@
+.env
+.env.save*
+service-account.json
+main
+app
+PCC
+*.db
+temp/

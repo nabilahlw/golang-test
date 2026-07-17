@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal/v3"
@@ -25,102 +24,85 @@ import (
 )
 
 var clientWa *whatsmeow.Client
-var pesan string
 var DB *gorm.DB
 
 func eventHandler(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
-		fmt.Println("Received a message!", v.Message.GetConversation())
-		fmt.Println(" => dari saya sendiri = ", v.Info.IsFromMe)
-		fmt.Println(" => server = ", v.Info.MessageSource.Chat.Server)
-		fmt.Println(" => apakah dari group = ", v.Info.IsGroup)
-		fmt.Println(" => apakah dari broadcast = ", v.Info.IsIncomingBroadcast())
+		// Mengambil isi teks dengan menangani beberapa kemungkinan tipe pesan
+		var pesan string
+		if v.Message.GetConversation() != "" {
+			pesan = v.Message.GetConversation()
+		} else if v.Message.ExtendedTextMessage != nil {
+			pesan = v.Message.ExtendedTextMessage.GetText()
+		}
 
-		if !v.Info.IsFromMe &&
-			v.Info.MessageSource.Chat.Server == "lid" &&
-			!v.Info.IsGroup &&
-			!v.Info.IsIncomingBroadcast() {
+		// Jika pesan kosong, abaikan (mungkin pesan gambar/stiker)
+		if pesan == "" {
+			return
+		}
 
-			fmt.Println("PENGIRIM = ", v.Info.Sender.User)
+		fmt.Println("DEBUG: Pesan ditangkap:", pesan)
+		fmt.Println("SERVER:", v.Info.MessageSource.Chat.Server)
+fmt.Println("IS GROUP:", v.Info.IsGroup)
+fmt.Println("IS BROADCAST:", v.Info.IsIncomingBroadcast())
+		// Filter chat pribadi saja
+		if !v.Info.IsGroup && !v.Info.IsIncomingBroadcast() {
+			
+            fmt.Println("DEBUG: Masuk ke dalam filter chat") // TAMBAHKAN INI
 
-			if v.Message.GetConversation() != "" {
-				pesan = v.Message.GetConversation()
-			} else if v.Message.ExtendedTextMessage != nil && v.Message.ExtendedTextMessage.GetText() != "" {
-				pesan = v.Message.ExtendedTextMessage.GetText()
-			}
+			// Cek apakah pesan mengandung [ai] dengan cara yang lebih toleran
+			if strings.Contains(strings.ToLower(pesan), "[ai]") {
+				fmt.Println("DEBUG: AI terdeteksi!")
+				
+				// Paksa ambil teks setelah [ai]
+				parts := strings.SplitN(strings.ToLower(pesan), "[ai]", 2)
+				pertanyaan := strings.TrimSpace(parts[1])
 
-			fmt.Println("PESAN = " + pesan)
-
-			var id_pesan []string
-			id_pesan = append(id_pesan, v.Info.ID)
-			_ = id_pesan
-
-			clientWa.MarkRead(context.Background(), []string{v.Info.ID}, time.Now(), v.Info.Chat, v.Info.Sender)
-			clientWa.SubscribePresence(context.Background(), v.Info.Sender)
-			clientWa.SendPresence(context.Background(), types.PresenceAvailable)
-			time.Sleep(2 * time.Second)
-			clientWa.SendChatPresence(context.Background(), v.Info.Sender, types.ChatPresenceComposing, types.ChatPresenceMediaText)
-			time.Sleep(3 * time.Second)
-			clientWa.SendChatPresence(context.Background(), v.Info.Sender, types.ChatPresencePaused, types.ChatPresenceMediaText)
-
-			pesanAsli := pesan
-
-			// convert ke huruf kecil semua
-			pesan = strings.ToLower(pesan)
-
-			if strings.HasPrefix(pesan, "[ai]") {
-
-				pertanyaan := strings.TrimSpace(pesanAsli[4:])
-
-				if pertanyaan != "" {
-
-					jawabanAi := ai.TanyaAi(v.Info.Sender.User, pertanyaan)
-
-					kirimPesanText(v.Info.Sender, jawabanAi)
-
+				if pertanyaan == "" {
+					kirimPesanText(v.Info.Sender, "Ya, ada yang bisa saya bantu?")
 				} else {
+					jawaban := ai.TanyaAi(v.Info.Sender.User, pertanyaan)
 
-					kirimPesanText(
-						v.Info.Sender,
-						"Masukkan pertanyaan setelah prefiks [ai]. Contoh: [ai] Selamat pagi",
-					)
+fmt.Printf("SENDER     = %+v\n", v.Info.Sender)
+fmt.Printf("CHAT       = %+v\n", v.Info.Chat)
+fmt.Printf("SOURCECHAT = %+v\n", v.Info.MessageSource.Chat)
 
+kirimPesanText(v.Info.Sender, jawaban)
 				}
-
-			} else if pesan == "tes" {
-
-				kirimPesan(v.Info.Sender)
-
-			} else {
-
-				kirimPesanDatabase(v.Info.Sender, pesan)
-
-			}
+            }
 		}
 	}
 }
 
 func kirimPesan(IDPenerima types.JID) {
-	clientWa.SendMessage(
-		context.Background(),
-		IDPenerima,
-		&waE2E.Message{
-			Conversation: proto.String("[UJI COBA] \n PESAN OTOMATIS"),
-		},
-	)
+	clientWa.SendMessage(context.Background(), IDPenerima, &waE2E.Message{
+		Conversation: proto.String("[UJI COBA] \n PESAN OTOMATIS BERHASIL"),
+	})
 }
 
 func kirimPesanText(IDPenerima types.JID, text string) {
-	clientWa.SendMessage(
-		context.Background(),
-		IDPenerima,
-		&waE2E.Message{
-			Conversation: proto.String(text),
-		},
-	)
-}
+	if text == "" {
+		text = "Maaf, AI tidak memberikan jawaban."
+	}
+	// Hilangkan device part (:35)
+    IDPenerima.Device = 0
 
+    fmt.Println("Mengirim WA:", text)
+    fmt.Println("JID:", IDPenerima.String())
+
+    _, err := clientWa.SendMessage(
+        context.Background(),
+        IDPenerima,
+        &waE2E.Message{
+            Conversation: proto.String(text),
+        },
+    )
+
+    if err != nil {
+        fmt.Println("ERROR SEND WA:", err)
+    }
+}
 func kirimPesanDatabase(IDPenerima types.JID, kode string) {
 	var pesanDB models.Pesan
 	result := DB.Where("kode = ?", kode).First(&pesanDB)
@@ -131,7 +113,6 @@ func kirimPesanDatabase(IDPenerima types.JID, kode string) {
 
 func KonekWa(db *gorm.DB) {
 	DB = db
-
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	ctx := context.Background()
 	container, err := sqlstore.New(ctx, "sqlite3", "file:examplestore.db?_foreign_keys=on", dbLog)
@@ -143,9 +124,6 @@ func KonekWa(db *gorm.DB) {
 	if err != nil {
 		panic(err)
 	}
-	if deviceStore != nil {
-		deviceStore.Platform = "macOS"
-	}
 
 	clientLog := waLog.Stdout("Client", "DEBUG", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
@@ -153,31 +131,19 @@ func KonekWa(db *gorm.DB) {
 
 	if client.Store.ID == nil {
 		qrChan, _ := client.GetQRChannel(context.Background())
-		err = client.Connect()
-		if err != nil {
-			panic(err)
-		}
+		client.Connect()
 		for evt := range qrChan {
 			if evt.Event == "code" {
 				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-				fmt.Println("QR code:", evt.Code)
-			} else {
-				fmt.Println("Login event:", evt.Event)
 			}
 		}
 	} else {
-		err = client.Connect()
-		if err != nil {
-			panic(err)
-		}
+		client.Connect()
 	}
 
 	clientWa = client
-	DB = db
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
-
 	client.Disconnect()
 }

@@ -17,7 +17,6 @@ import (
 	"main/fungsi"
 	"main/models"
 	"main/wa"
-
 	jwtV3 "github.com/appleboy/gin-jwt/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -27,7 +26,7 @@ import (
 func main() {
 	godotenv.Load()
 
-	db := koneksi()
+	db := Koneksi()
 	db.AutoMigrate(&models.Suhu{})
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Dokumen{})
@@ -94,20 +93,20 @@ func main() {
 		auth.PUT("/user", controllers.UserUbah)
 		auth.DELETE("/user", controllers.UserHapus)
 		auth.GET("/drive", controllers.DriveTampil)
-		auth.GET("/drive/:id", controllers.DriveUnduh)
+		//auth.GET("/drive/:id", controllers.DriveUnduh)
 		auth.GET("/sheet", controllers.SheetTampil)
 		auth.POST("/sheet", controllers.SheetTambah)
 		auth.GET("/pesan", controllers.PesanTampil)
 		auth.POST("/pesan", controllers.PesanTambah)
 		auth.PUT("/pesan", controllers.PesanUbah)
 		auth.DELETE("/pesan", controllers.PesanHapus)
+		auth.POST("/ai", controllers.HandleAi)
 	}
 
 	port := os.Getenv("PORT")
-	go r.Run(":" + port)
 	ai.InitAi()
 	go wa.KonekWa(db)
-	ai.MulaiChatAi()
+	r.Run(":" + port)
 }
 
 // cara jalanin ilama, di folder ilama =  ./llama-server -m qwen2.5-0.5b-instruct-q4_k_m.gguf -c 2048 --port 8080
