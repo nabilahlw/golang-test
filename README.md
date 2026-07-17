@@ -1,4 +1,4 @@
-# UAS Cloud Computing: Backend API & Cloud Storage
+# UAS Cloud Computing 
 
 Sistem ini dikembangkan menggunakan bahasa pemrograman Go (Golang) dan mengimplementasi Google Sheet API dan AI API dari Open Router pada arsitektur aplikasi backend yang berjalan di lingkungan server cloud (VPS)
 
