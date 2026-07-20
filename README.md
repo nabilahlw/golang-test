@@ -6,8 +6,9 @@ Sistem ini dikembangkan menggunakan bahasa pemrograman Go (Golang) dan mengimple
 [**Video Demo UAS**](https://drive.google.com/file/d/1PQYeOHHJ6CV8q804L0le3fIkD6JoYMfV/view?usp=sharing)
 
 ## Teknologi yang Digunakan
-*   Language : Go
+*   Programming Language : Go
 *   Framework : Gin Gonic
-*   Cloud Service : Google Sheet dan Open Router API
+*   Database: SQLite3
+*   API Key : Google Sheet dan Open Router AI
 *   Deployment : Ubuntu Server (VPS)
 *   Testing : Postman dan WhatsApp
