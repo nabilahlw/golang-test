@@ -1,10 +1,3 @@
-// ID FOLDER = 1vgGzfojOmhMGw6PCGEUaIdRqsMR_KFsVpWviLxkBKVkAUSjqoyjdONOb
-// URL APK WEB = https://script.google.com/macros/s/AKfycbzqiD0BGQg3S3kNPQAmDkhN-SwK_NTxoOEyy2vMIFmDMfEhItUbuM48Ol4hqUXEtDRRUQ/exec
-// id PENERAPAN = AKfycbzqiD0BGQg3S3kNPQAmDkhN-SwK_NTxoOEyy2vMIFmDMfEhItUbuM48Ol4hqUXEtDRRUQ
-// KALO AMBBIL JWT TOKEN, POST LOGIN http://localhost:8111/login = "username": "admin", "password": "123456"
-// ACCESS ID = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODA2NjM1MjUsImlkIjoxLCJuYW1hIjoiQWRtaW4iLCJvcmlnX2lhdCI6MTc4MDY1OTkyNX0.UTN5sQCxRQKFNSjvqqOKfm4Qv3fP33frDkEuQgBPmdA
-// url drive pcc = 1jEX5u_O4z9POMEFRX4Aa2nEYGybiKUqm
-
 package main
 
 import (
@@ -109,5 +102,3 @@ func main() {
 	r.Run(":" + port)
 }
 
-// cara jalanin ilama, di folder ilama =  ./llama-server -m qwen2.5-0.5b-instruct-q4_k_m.gguf -c 2048 --port 8080
-//trs ke terminal projek PCC llau = go run main.go koneksi.go
